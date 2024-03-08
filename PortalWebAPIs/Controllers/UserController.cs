@@ -23,8 +23,6 @@ namespace PortalWebAPIs.Controllers
         {
             List<Dictionary<string, object>> userDetailsList = new List<Dictionary<string, object>>();
 
-            
-
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
@@ -84,20 +82,6 @@ namespace PortalWebAPIs.Controllers
                                 userDetailsList.Add(userDetails);
                             }
                         }
-                        //cmd.Parameters.AddWithValue("@UserLoginId", model.UserLoginId);
-                        //cmd.Parameters.AddWithValue("@FullName", model.FullName);
-                        //cmd.Parameters.AddWithValue("@DeptId", model.DeptId);
-
-                        //con.Open();
-                        //int Rows = cmd.ExecuteNonQuery();
-                        //if (Rows > 0)
-                        //{
-                        //    return true;
-                        //}
-                        //else
-                        //{
-                        //    return false;
-                        //}
                     }
                     con.Close();
                 }
@@ -105,13 +89,74 @@ namespace PortalWebAPIs.Controllers
             }
             catch (Exception ex)
             {
-                // Log or handle the exception as needed
                 throw ex;
             }
         }
 
 
+        [HttpGet]
+        [Route("api/GetUserDetailsByUserId/{userId}")]
+        public IHttpActionResult GetUserDetailsByUserId(int userId)
+        {
+            List<Dictionary<string, object>> userDetailsList = new List<Dictionary<string, object>>();
 
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                using (SqlCommand command = new SqlCommand("API_GetUserDetailByUserId", connection))
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@userId", userId);
+
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var userDetails = new Dictionary<string, object>
+                             {
+                                { "UserId", reader.GetInt32(0) },
+                                { "UserLoginId", reader.GetString(1) },
+                                { "FullName", reader.GetString(2) },
+                                { "DeptId", reader.GetInt32(3) },
+                            };
+                            userDetailsList.Add(userDetails);
+                        }
+                    }
+                }
+            }
+
+            return Json(userDetailsList);
+        }
+
+        [HttpGet]
+        [Route("api/DeleteUserByUserId/{userId}")]
+        public void DeleteUserByUserId(int userId)
+        {
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    using (SqlCommand command = new SqlCommand("API_DeleteUserInfo", connection))
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@userId", userId);
+                        command.ExecuteNonQuery();
+
+                    }
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            
+
+        }
 
     }
 }
